@@ -12,6 +12,7 @@ var batch = require('./batch'),
     Parse = require('parse/node').Parse,
     PromiseRouter = require('./PromiseRouter'),
     httpRequest = require('./httpRequest');
+    LoggerAdapter = require('./LoggerAdapter');
 
 // Mutate the Parse object to add the Cloud Code handlers
 addParseCloud();
@@ -62,6 +63,9 @@ function ParseServer(args) {
       throw "argument 'cloud' must either be a string or a function";
     }
 
+  }
+  if (args.loggerAdapter) {
+    LoggerAdapter.setAdapter(args.loggerAdapter);
   }
 
   cache.apps[args.appId] = {
@@ -115,6 +119,7 @@ function ParseServer(args) {
   router.merge(require('./installations'));
   router.merge(require('./functions'));
   router.merge(require('./schemas'));
+  router.merge(require('./logs'));
 
   batch.mountOnto(router);
 

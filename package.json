@@ -20,6 +20,7 @@
     "multer": "^1.1.0",
     "parse": "^1.7.0",
     "request": "^2.65.0"
+    "winston": "^2.1.1"
   },
   "devDependencies": {
     "codecov": "^1.0.1",
