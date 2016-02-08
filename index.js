@@ -7,6 +7,7 @@ var batch = require('./batch'),
     express = require('express'),
     FilesAdapter = require('./FilesAdapter'),
     S3Adapter = require('./S3Adapter'),
+    PushAdapter = require('./PushAdapter'),
     middlewares = require('./middlewares'),
     multer = require('multer'),
     Parse = require('parse/node').Parse,
@@ -79,6 +80,10 @@ function ParseServer(args) {
   if (process.env.FACEBOOK_APP_ID) {
     cache.apps[args.appId]['facebookAppIds'].push(process.env.FACEBOOK_APP_ID);
   }
+
+  // Register push senders
+  var pushConfig = args.push;
+  PushAdapter.getAdapter().registerPushSenders(pushConfig);
 
   // Initialize the node client SDK automatically
   Parse.initialize(args.appId, args.javascriptKey || '', args.masterKey);

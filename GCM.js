@@ -5,18 +5,18 @@ var randomstring = require('randomstring');
 var GCMTimeToLiveMax = 4 * 7 * 24 * 60 * 60; // GCM allows a max of 4 weeks
 var GCMRegistrationTokensMax = 1000;
 
-function GCM(apiKey) {
-  this.sender = new gcm.Sender(apiKey);
+function GCM(args) {
+  this.sender = new gcm.Sender(args.apiKey);
 }
 
 /**
  * Send gcm request.
  * @param {Object} data The data we need to send, the format is the same with api request body
- * @param {Array} registrationTokens A array of registration tokens
+ * @param {Array} devices A array of devices
  * @returns {Object} A promise which is resolved after we get results from gcm
  */
-GCM.prototype.send = function (data, registrationTokens) {
-  if (registrationTokens.length >= GCMRegistrationTokensMax) {
+GCM.prototype.send = function (data, devices) {
+  if (devices.length >= GCMRegistrationTokensMax) {
     throw new Parse.Error(Parse.Error.PUSH_MISCONFIGURED,
                           'Too many registration tokens for a GCM request.');
   }
@@ -36,9 +36,17 @@ GCM.prototype.send = function (data, registrationTokens) {
   // Make and send gcm request
   var message = new gcm.Message(gcmPayload);
   var promise = new Parse.Promise();
+  var registrationTokens = []
+  for (var i = 0; i < devices.length; i++) {
+    registrationTokens.push(devices[i].deviceToken);
+  }
   this.sender.send(message, { registrationTokens: registrationTokens }, 5, function (error, response) {
     // TODO: Use the response from gcm to generate and save push report
     // TODO: If gcm returns some deviceTokens are invalid, set tombstone for the installation
+    console.log('GCM request and response %j', {
+      request: message,
+      response: response
+    });
     promise.resolve();
   });
   return promise;
@@ -75,6 +83,8 @@ var generateGCMPayload = function(coreData, pushId, timeStamp, expirationTime) {
   }
   return payload;
 }
+
+GCM.GCMRegistrationTokensMax = GCMRegistrationTokensMax;
 
 if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
   GCM.generateGCMPayload = generateGCMPayload;

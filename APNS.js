@@ -33,18 +33,26 @@ function APNS(args) {
   });
 
   this.sender.on("socketError", console.error);
+
+  this.sender.on("transmitted", function(notification, device) {
+    console.log("APNS Notification transmitted to:" + device.token.toString("hex"));
+  });
 }
 
 /**
  * Send apns request.
  * @param {Object} data The data we need to send, the format is the same with api request body
- * @param {Array} deviceTokens A array of device tokens
+ * @param {Array} devices A array of devices
  * @returns {Object} A promise which is resolved immediately
  */
-APNS.prototype.send = function(data, deviceTokens) {
+APNS.prototype.send = function(data, devices) {
   var coreData = data.data;
   var expirationTime = data['expiration_time'];
   var notification = generateNotification(coreData, expirationTime);
+  var deviceTokens = [];
+  for (var i = 0; i < devices.length; i++) {
+    deviceTokens.push(devices[i].deviceToken);
+  }
   this.sender.pushNotification(notification, deviceTokens);
   // TODO: pushNotification will push the notification to apn's queue.
   // We do not handle error in V1, we just relies apn to auto retry and send the
