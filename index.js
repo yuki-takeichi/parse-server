@@ -57,7 +57,17 @@ function ParseServer(args) {
     if (typeof args.cloud === 'function') {
       args.cloud(Parse)
     } else if (typeof args.cloud === 'string') {
-      require(args.cloud);
+      var Module = require('module');
+      originalRequire = Module.prototype.require;
+      Module.prototype.require = function(path) {
+        /* This pollutes package name space that starts with "cloud/",
+         * but package naming convention doesn't allow to include slash within it.
+         * So this code doesn't break the existing behavior.
+         */
+        var newPath = path.startsWith('cloud/') ? args.cloud + path : path;
+        originalRequire(newPath);
+      };
+      originalRequire(args.cloud + 'cloud/main.js');
     } else {
       throw "argument 'cloud' must either be a string or a function";
     }
