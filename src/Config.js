@@ -28,6 +28,7 @@ export class Config {
     this.javascriptKey = cacheInfo.javascriptKey;
     this.dotNetKey = cacheInfo.dotNetKey;
     this.restAPIKey = cacheInfo.restAPIKey;
+    this.webHookKey = cacheInfo.webHookKey;
     this.fileKey = cacheInfo.fileKey;
     this.facebookAppIds = cacheInfo.facebookAppIds;
     this.allowClientClassCreation = cacheInfo.allowClientClassCreation;

@@ -47,3 +47,6 @@ lib/
 
 # Folder created by FileSystemAdapter
 /files
+
+.sw*
+__lib/

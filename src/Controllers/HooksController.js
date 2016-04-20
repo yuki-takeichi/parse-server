@@ -4,6 +4,7 @@ import * as DatabaseAdapter from "../DatabaseAdapter";
 import * as triggers from "../triggers";
 import * as Parse from "parse/node";
 import * as request from "request";
+import cache from '../cache';
 
 const DefaultHooksCollectionName = "_Hooks";
 
@@ -94,7 +95,7 @@ export class HooksController {
   }
 
   addHookToTriggers(hook) {
-    var wrappedFunction = wrapToHTTPRequest(hook);
+    var wrappedFunction = this.wrapToHTTPRequest(hook);
     wrappedFunction.url = hook.url;
     if (hook.className) {
       triggers.addTrigger(hook.triggerName, hook.className, wrappedFunction, this._applicationId)
@@ -166,51 +167,53 @@ export class HooksController {
     }
     throw new Parse.Error(143, "invalid hook declaration");
   };
-}
 
-function wrapToHTTPRequest(hook) {
-  return (req, res) => {
-    let jsonBody = {};
-    for (var i in req) {
-      jsonBody[i] = req[i];
-    }
-    if (req.object) {
-      jsonBody.object = req.object.toJSON();
-      jsonBody.object.className = req.object.className;
-    }
-    if (req.original) {
-      jsonBody.original = req.original.toJSON();
-      jsonBody.original.className = req.original.className;
-    }
-    let jsonRequest = {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(jsonBody)
-    };
+  wrapToHTTPRequest(hook) {
+    return (req, res) => {
+      let jsonBody = {};
+      for (var i in req) {
+        jsonBody[i] = req[i];
+      }
+      if (req.object) {
+        jsonBody.object = req.object.toJSON();
+        jsonBody.object.className = req.object.className;
+      }
+      if (req.original) {
+        jsonBody.original = req.original.toJSON();
+        jsonBody.original.className = req.original.className;
+      }
+      let jsonRequest = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Parse-Webhook-Key': cache.apps.get(this._applicationId).webHookKey
+        },
+        body: JSON.stringify(jsonBody)
+      };
 
-    request.post(hook.url, jsonRequest, function (err, httpResponse, body) {
-      var result;
-      if (body) {
-        if (typeof body == "string") {
-          try {
-            body = JSON.parse(body);
-          } catch (e) {
-            err = { error: "Malformed response", code: -1 };
+      request.post(hook.url, jsonRequest, function (err, httpResponse, body) {
+        var result;
+        if (body) {
+          if (typeof body == "string") {
+            try {
+              body = JSON.parse(body);
+            } catch (e) {
+              err = { error: "Malformed response", code: -1 };
+            }
+          }
+          if (!err) {
+            result = body.success;
+            err = body.error;
           }
         }
-        if (!err) {
-          result = body.success;
-          err = body.error;
+        if (err) {
+          return res.error(err);
+        } else {
+          return res.success({object: result});
         }
-      }
-      if (err) {
-        return res.error(err);
-      } else {
-        return res.success(result);
-      }
-    });
-  }
+      });
+    }
+  };
+
 }
 
 export default HooksController;

@@ -52,6 +52,7 @@ function handleBatch(router, req) {
       body: restRequest.body,
       params: match.params,
       config: req.config,
+      info: req.info,
       auth: req.auth
     };
 
