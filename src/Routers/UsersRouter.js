@@ -143,7 +143,8 @@ export class UsersRouter extends ClassesRouter {
       ).then((records) => {
         if (records.results && records.results.length) {
           return rest.del(req.config, Auth.master(req.config), '_Session',
-            records.results[0].objectId
+            records.results[0].objectId,
+            { ignoreTriggers: req.headers['x-parse-from-cloud-code'] === "1" }
           ).then(() => {
             return Promise.resolve(success);
           });

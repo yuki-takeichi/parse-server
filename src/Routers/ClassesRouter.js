@@ -99,16 +99,21 @@ export class ClassesRouter extends PromiseRouter {
   }
 
   handleCreate(req) {
-    return rest.create(req.config, req.auth, req.params.className, req.body);
+    return rest.create(req.config, req.auth, req.params.className, req.body, {
+      ignoreTriggers: req.headers['x-parse-from-cloud-code'] === "1"
+    });
   }
 
   handleUpdate(req) {
-    return rest.update(req.config, req.auth, req.params.className, req.params.objectId, req.body);
+    return rest.update(req.config, req.auth, req.params.className, req.params.objectId, req.body, {
+      ignoreTriggers: req.headers['x-parse-from-cloud-code'] === "1"
+    });
   }
 
   handleDelete(req) {
-    return rest.del(req.config, req.auth, req.params.className, req.params.objectId)
-      .then(() => {
+    return rest.del(req.config, req.auth, req.params.className, req.params.objectId, {
+      ignoreTriggers: req.headers['x-parse-from-cloud-code'] === "1"
+    }).then(() => {
         return {response: {}};
       });
   }

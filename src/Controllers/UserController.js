@@ -203,6 +203,8 @@ export class UserController extends AdaptableController {
 function updateUserPassword(userId, password, config) {
     return rest.update(config, Auth.master(config), '_User', userId, {
       password: password
+    }, {
+      ignoreTriggers: true
     });
  }
 

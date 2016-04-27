@@ -53,6 +53,7 @@ function handleBatch(router, req) {
       params: match.params,
       config: req.config,
       info: req.info,
+      headers: req.headers,
       auth: req.auth
     };
 
