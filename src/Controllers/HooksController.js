@@ -208,7 +208,8 @@ export class HooksController {
         if (err) {
           return res.error(err);
         } else {
-          return res.success({object: result});
+          delete result['className'];
+          return res.success(result);
         }
       });
     }
