@@ -24,7 +24,7 @@ function find(config, auth, className, restWhere, restOptions) {
 }
 
 // Returns a promise that doesn't resolve to any useful value.
-function del(config, auth, className, objectId) {
+function del(config, auth, className, objectId, options) {
   if (typeof objectId !== 'string') {
     throw new Parse.Error(Parse.Error.INVALID_JSON,
                           'bad objectId');
@@ -39,11 +39,13 @@ function del(config, auth, className, objectId) {
 
   var inflatedObject;
 
+  var shouldRunTriggers = !options || (options && !(options.ignoreTriggers));
   return Promise.resolve().then(() => {
-    if (triggers.getTrigger(className, triggers.Types.beforeDelete, config.applicationId) ||
-        triggers.getTrigger(className, triggers.Types.afterDelete, config.applicationId) ||
-        (config.liveQueryController && config.liveQueryController.hasLiveQuery(className)) ||
-        className == '_Session') {
+    if (shouldRunTriggers &&
+        (triggers.getTrigger(className, triggers.Types.beforeDelete, config.applicationId) ||
+         triggers.getTrigger(className, triggers.Types.afterDelete, config.applicationId) ||
+         (config.liveQueryController && config.liveQueryController.hasLiveQuery(className)) ||
+         className == '_Session')) {
       return find(config, Auth.master(config), className, {objectId: objectId})
       .then((response) => {
         if (response && response.results && response.results.length) {
@@ -79,28 +81,32 @@ function del(config, auth, className, objectId) {
       objectId: objectId
     }, options);
   }).then(() => {
-    triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config.applicationId);
+    if (shouldRunTriggers) {
+      triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config.applicationId);
+    }
     return Promise.resolve();
   });
 }
 
 // Returns a promise for a {response, status, location} object.
-function create(config, auth, className, restObject) {
+function create(config, auth, className, restObject, options) {
   enforceRoleSecurity('create', className, auth);
-  var write = new RestWrite(config, auth, className, null, restObject);
+  var write = new RestWrite(config, auth, className, null, restObject, null, options);
   return write.execute();
 }
 
 // Returns a promise that contains the fields of the update that the
 // REST API is supposed to return.
 // Usually, this is just updatedAt.
-function update(config, auth, className, objectId, restObject) {
+function update(config, auth, className, objectId, restObject, options) {
   enforceRoleSecurity('update', className, auth);
 
+  var shouldRunTriggers = !options || (options && !(options.ignoreTriggers));
   return Promise.resolve().then(() => {
-    if (triggers.getTrigger(className, triggers.Types.beforeSave, config.applicationId) ||
-        triggers.getTrigger(className, triggers.Types.afterSave, config.applicationId) ||
-        (config.liveQueryController && config.liveQueryController.hasLiveQuery(className))) {
+    if (shouldRunTriggers &&
+        (triggers.getTrigger(className, triggers.Types.beforeSave, config.applicationId) ||
+         triggers.getTrigger(className, triggers.Types.afterSave, config.applicationId) ||
+         (config.liveQueryController && config.liveQueryController.hasLiveQuery(className)))) {
       return find(config, Auth.master(config), className, {objectId: objectId});
     }
     return Promise.resolve({});
@@ -111,7 +117,7 @@ function update(config, auth, className, objectId, restObject) {
     }
 
     var write = new RestWrite(config, auth, className,
-                              {objectId: objectId}, restObject, originalRestObject);
+                              {objectId: objectId}, restObject, originalRestObject, options);
     return write.execute();
   });
 }

@@ -22,12 +22,13 @@ var triggers = require('./triggers');
 // RestWrite will handle objectId, createdAt, and updatedAt for
 // everything. It also knows to use triggers and special modifications
 // for the _User class.
-function RestWrite(config, auth, className, query, data, originalData) {
+function RestWrite(config, auth, className, query, data, originalData, options) {
   this.config = config;
   this.auth = auth;
   this.className = className;
   this.storage = {};
   this.runOptions = {};
+  this.options = options || {};
 
   if (!query && data.objectId) {
     throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'objectId ' +
@@ -70,6 +71,12 @@ RestWrite.prototype.execute = function() {
   }).then(() => {
     return this.validateAuthData();
   }).then(() => {
+    /*
+    // ノハナのケースだとbeforeSaveは再帰しないのでこれはなくておｋ
+    if (this.options.ignoreTriggers) {
+      return Promise.resolve();
+    }
+    */
     return this.runBeforeTrigger();
   }).then(() => {
     return this.setRequiredFieldsIfNeeded();
@@ -82,6 +89,9 @@ RestWrite.prototype.execute = function() {
   }).then(() => {
     return this.handleFollowup();
   }).then(() => {
+    if (this.options.ignoreTriggers) {
+      return Promise.resolve();
+    }
     return this.runAfterTrigger();
   }).then(() => {
     return this.cleanUserAuthData();
