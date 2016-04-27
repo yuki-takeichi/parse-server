@@ -847,6 +847,7 @@ RestWrite.prototype.sanitizedData = function() {
     }
     return data;
   }, deepcopy(this.data));
+  delete data['sessionToken']; // TODO: dirty fix. should be fixed later
   return Parse._decode(undefined, data);
 }
 
