@@ -177,6 +177,7 @@ RestWrite.prototype.runBeforeTrigger = function() {
     return triggers.maybeRunTrigger(triggers.Types.beforeSave, this.auth, updatedObject, originalObject, this.config.applicationId);
   }).then((response) => {
     if (response) {
+      delete response['className'];
       this.data = response;
       this.storage['changedByTrigger'] = true;
       // We should delete the objectId for an update write
