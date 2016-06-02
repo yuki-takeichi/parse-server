@@ -4,6 +4,7 @@ import * as DatabaseAdapter from "../DatabaseAdapter";
 import * as triggers from "../triggers";
 import * as Parse from "parse/node";
 import * as request from "request";
+import cache from '../cache';
 
 const DefaultHooksCollectionName = "_Hooks";
 
@@ -184,7 +185,8 @@ function wrapToHTTPRequest(hook) {
     }
     let jsonRequest = {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Parse-Webhook-Key': cache.apps.get(this._applicationId).webHookKey
       },
       body: JSON.stringify(jsonBody)
     };

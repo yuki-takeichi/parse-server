@@ -136,6 +136,8 @@ RestWrite.prototype.validateSchema = function() {
 // Runs any beforeSave triggers against this operation.
 // Any change leads to our data being mutated.
 RestWrite.prototype.runBeforeTrigger = function() {
+  if (this.className === '_Session') { return ; }
+
   if (this.response) {
     return;
   }
@@ -162,8 +164,9 @@ RestWrite.prototype.runBeforeTrigger = function() {
   return Promise.resolve().then(() => {
     return triggers.maybeRunTrigger(triggers.Types.beforeSave, this.auth, updatedObject, originalObject, this.config.applicationId);
   }).then((response) => {
-    if (response && response.object) {
-      this.data = response.object;
+    if (response) {
+      delete response['className'];
+      this.data = response;
       this.storage['changedByTrigger'] = true;
       // We should delete the objectId for an update write
       if (this.query && this.query.objectId) {

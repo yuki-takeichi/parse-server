@@ -37,6 +37,7 @@ export class FunctionsRouter extends PromiseRouter {
       var request = {
         params: params,
         master: req.auth && req.auth.isMaster,
+        functionName: req.params.functionName,
         user: req.auth && req.auth.user,
         installationId: req.info.installationId
       };
