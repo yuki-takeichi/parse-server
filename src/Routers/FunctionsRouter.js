@@ -28,7 +28,6 @@ export class FunctionsRouter extends PromiseRouter {
   }
   
   static handleCloudFunction(req) {
-    console.error(req.method + ' ' + req.originalUrl);
     var applicationId = req.config.applicationId;
     var theFunction = triggers.getFunction(req.params.functionName, applicationId);
     var theValidator = triggers.getValidator(req.params.functionName, applicationId);
